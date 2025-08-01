@@ -11,6 +11,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { RootStackParamList } from "../../navigation";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useAuth } from "../../context/AuthContext/AuthContext";
+import { useThemeMode } from "../../context/ThemeContext";
+import ConsultationCard from "../../components/ConsultationCard";
 
 const blogList = [
   {
@@ -49,9 +52,19 @@ export default function Home() {
   >;
 
   const navigation = useNavigation<HomeScreenNavProp>();
+  const { user } = useAuth();
+  const { theme } = useThemeMode();
+
+  const handleConsultationPress = (hasConsultations: boolean) => {
+    if (hasConsultations) {
+      navigation.navigate("UserConsultations");
+    } else {
+      navigation.navigate("BookSupport");
+    }
+  };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#f6fafd" }}>
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView
         contentContainerStyle={{
           padding: 20,
@@ -61,13 +74,15 @@ export default function Home() {
         nestedScrollEnabled={true}
       >
         {/* Greeting */}
-        <Text style={{ fontSize: 18, color: "#333", marginBottom: 12 }}>
-          👋 Xin chào, Khách!
+        <Text
+          style={{ fontSize: 18, color: theme.colors.text, marginBottom: 12 }}
+        >
+          👋 Xin chào, {user?.name || "Khách"}!
         </Text>
         {/* Banner */}
         <View
           style={{
-            backgroundColor: "#e7f1ff",
+            backgroundColor: theme.colors.accent + "20",
             borderRadius: 16,
             padding: 18,
             marginBottom: 18,
@@ -75,12 +90,16 @@ export default function Home() {
             alignItems: "center",
           }}
         >
-          <Ionicons name="bulb-outline" size={30} color="#008001" />
+          <Ionicons
+            name="bulb-outline"
+            size={30}
+            color={theme.colors.primary}
+          />
           <Text
             style={{
               marginLeft: 12,
               fontSize: 16,
-              color: "#008001",
+              color: theme.colors.primary,
               flex: 1,
               fontWeight: "bold",
             }}
@@ -104,6 +123,7 @@ export default function Home() {
             label="Đặt lịch khám"
             desc="Đăng ký khám, chọn bác sĩ điều trị"
             onPress={() => navigation.navigate("BookAppointment")}
+            theme={theme}
           />
           <HomeQuickButton
             icon="flask"
@@ -111,76 +131,107 @@ export default function Home() {
             label="Kết quả xét nghiệm"
             desc="Tra cứu chỉ số, lịch sử khám"
             onPress={() => navigation.navigate("MedicalHistory")}
+            theme={theme}
+          />
+          <ConsultationCard
+            onPress={handleConsultationPress}
+            onAddNew={() => navigation.navigate("BookSupport")}
           />
           <HomeQuickButton
-            icon="chatbubbles"
+            icon="receipt"
+            color="#6C5CE7"
+            label="Đơn thuốc"
+            desc="Xem và thanh toán đơn thuốc"
+            onPress={() => navigation.navigate("PrescriptionList")}
+            theme={theme}
+          />
+          <HomeQuickButton
+            icon="chatbubble-ellipses"
             color="#E17055"
-            label="Tư vấn bác sĩ"
-            desc="Đặt hẹn tư vấn (có thể ẩn danh)"
-            onPress={() => navigation.navigate("BookSupport")}
-          />
-          <HomeQuickButton
-            icon="person"
-            color="#636E72"
-            label="Hồ sơ cá nhân"
-            desc="Thông tin, lịch sử điều trị"
-            onPress={() => navigation.navigate("UserProfile")}
+            label="Trợ lý AI"
+            desc="Tư vấn HIV/AIDS với AI"
+            onPress={() => navigation.navigate("AIChat")}
+            theme={theme}
           />
         </View>
         {/* Lịch nhắc tái khám */}
         <View
           style={{
-            backgroundColor: "#fff",
+            backgroundColor: theme.colors.surface,
             borderRadius: 14,
             padding: 16,
             marginBottom: 18,
-            shadowColor: "#000",
+            shadowColor: theme.colors.shadowColor,
             shadowOpacity: 0.04,
             shadowRadius: 6,
             elevation: 2,
           }}
         >
-          <Text style={{ fontWeight: "bold", fontSize: 16, marginBottom: 4 }}>
+          <Text
+            style={{
+              fontWeight: "bold",
+              fontSize: 16,
+              marginBottom: 4,
+              color: theme.colors.text,
+            }}
+          >
             📅 Nhắc nhở
           </Text>
-          <Text style={{ color: "#333" }}>
+          <Text style={{ color: theme.colors.text }}>
             Lịch tái khám tiếp theo của bạn:{" "}
-            <Text style={{ fontWeight: "bold", color: "#008001" }}>
+            <Text style={{ fontWeight: "bold", color: theme.colors.primary }}>
               25/05/2025
             </Text>
           </Text>
-          <Text style={{ color: "#333" }}>
+          <Text style={{ color: theme.colors.text }}>
             Uống thuốc ARV lúc:{" "}
-            <Text style={{ fontWeight: "bold", color: "#008001" }}>
+            <Text style={{ fontWeight: "bold", color: theme.colors.primary }}>
               21:00 tối nay
             </Text>
           </Text>
         </View>
         {/* Blog & Tài liệu giáo dục */}
-        <Text style={{ fontWeight: "bold", fontSize: 16, marginBottom: 10 }}>
+        <Text
+          style={{
+            fontWeight: "bold",
+            fontSize: 16,
+            marginBottom: 10,
+            color: theme.colors.text,
+          }}
+        >
           Tài liệu & Kinh nghiệm
         </Text>
         <View style={{ marginBottom: 14 }}>
           <EducationMaterialCard
-            icon="information-circle-outline"
+            icon="medical-outline"
             title="Tổng quan về HIV/AIDS"
             desc="Tìm hiểu về căn bệnh, đường lây, dấu hiệu, phòng tránh và điều trị."
             link="https://vaac.gov.vn/hiv-aids-nhung-dieu-can-biet.html"
+            theme={theme}
           />
           <EducationMaterialCard
             icon="medkit-outline"
             title="Hướng dẫn uống thuốc ARV đúng cách"
             desc="Các lưu ý khi sử dụng ARV, cách phòng ngừa quên liều và tác dụng phụ."
             link="https://hongngochospital.vn/vi/can-chu-y-gi-khi-dieu-tri-bang-thuoc-khang-hiv#:~:text=C%C3%A1c%20thu%E1%BB%91c%20u%E1%BB%91ng%202%20l%E1%BA%A7n,c%C3%A1ch%20nhau%208%20gi%E1%BB%9D%2Fl%E1%BA%A7n.&text=N%E1%BA%BFu%20kh%C3%B4ng%20tu%C3%A2n%20th%E1%BB%A7%20(ngh%C4%A9a,xu%E1%BA%A5t%20hi%E1%BB%87n%20s%E1%BB%B1%20kh%C3%A1ng%20thu%E1%BB%91c."
+            theme={theme}
           />
           <EducationMaterialCard
             icon="happy-outline"
             title="Hỗ trợ tâm lý cho bệnh nhân HIV"
             desc="Kinh nghiệm sống tích cực, vượt qua kỳ thị và lời khuyên từ chuyên gia."
             link="https://bvquan5.medinet.gov.vn/chuyen-muc/cai-thien-suc-khoe-tam-than-cho-nguoi-nhiem-hiv-cmobile16896-130303.aspx"
+            theme={theme}
           />
         </View>
-        <Text style={{ fontWeight: "bold", fontSize: 16, marginBottom: 10 }}>
+        <Text
+          style={{
+            fontWeight: "bold",
+            fontSize: 16,
+            marginBottom: 10,
+            color: theme.colors.text,
+          }}
+        >
           Blog chia sẻ
         </Text>
         <ScrollView
@@ -194,6 +245,7 @@ export default function Home() {
               title={blog.title}
               image={blog.image}
               onPress={() => navigation.navigate("BlogDetail", { blog })}
+              theme={theme}
             />
           ))}
         </ScrollView>
@@ -202,12 +254,12 @@ export default function Home() {
   );
 }
 
-function HomeQuickButton({ icon, color, label, desc, onPress }) {
+function HomeQuickButton({ icon, color, label, desc, onPress, theme }) {
   return (
     <TouchableOpacity
       onPress={onPress}
       style={{
-        backgroundColor: "#fff",
+        backgroundColor: theme.colors.surface,
         borderRadius: 16,
         alignItems: "center",
         justifyContent: "center",
@@ -215,7 +267,7 @@ function HomeQuickButton({ icon, color, label, desc, onPress }) {
         minHeight: 90,
         marginBottom: 14,
         paddingVertical: 12,
-        shadowColor: "#000",
+        shadowColor: theme.colors.shadowColor,
         shadowOpacity: 0.1,
         shadowRadius: 10,
         shadowOffset: { width: 0, height: 4 },
@@ -232,7 +284,7 @@ function HomeQuickButton({ icon, color, label, desc, onPress }) {
         <Text
           style={{
             fontSize: 11,
-            color: "#888",
+            color: theme.colors.textTertiary,
             marginTop: 2,
             textAlign: "center",
           }}
@@ -244,17 +296,17 @@ function HomeQuickButton({ icon, color, label, desc, onPress }) {
   );
 }
 
-function HomeBlogCard({ title, image, onPress }) {
+function HomeBlogCard({ title, image, onPress, theme }) {
   return (
     <TouchableOpacity
       onPress={onPress}
       style={{
         width: 170,
         marginRight: 14,
-        backgroundColor: "#fff",
+        backgroundColor: theme.colors.surface,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: "#e0e0e0",
+        borderColor: theme.colors.border,
       }}
       activeOpacity={0.8}
     >
@@ -269,7 +321,9 @@ function HomeBlogCard({ title, image, onPress }) {
         resizeMode="cover"
       />
       <View style={{ padding: 10 }}>
-        <Text style={{ fontSize: 13, color: "#222", fontWeight: "bold" }}>
+        <Text
+          style={{ fontSize: 13, color: theme.colors.text, fontWeight: "bold" }}
+        >
           {title}
         </Text>
       </View>
@@ -277,52 +331,73 @@ function HomeBlogCard({ title, image, onPress }) {
   );
 }
 
-function EducationMaterialCard({ icon = "book-outline", title, desc, link }) {
+function EducationMaterialCard({
+  icon = "book-outline",
+  title,
+  desc,
+  link,
+  theme,
+}) {
   return (
     <TouchableOpacity
       onPress={() => Linking.openURL(link)}
       activeOpacity={0.7}
       style={{
-        backgroundColor: "#F1FAFF",
-        borderRadius: 18,
-        padding: 16,
-        marginBottom: 18,
+        backgroundColor: theme.colors.surface,
+        borderRadius: 12,
+        padding: 12,
+        marginBottom: 10,
         flexDirection: "row",
         alignItems: "center",
-        shadowColor: "#000",
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-        shadowOffset: { width: 0, height: 2 },
-        elevation: 2,
+        borderWidth: 1,
+        borderColor: theme.colors.border,
+        shadowColor: theme.colors.shadowColor,
+        shadowOpacity: 0.03,
+        shadowRadius: 3,
+        shadowOffset: { width: 0, height: 1 },
+        elevation: 1,
       }}
     >
       <View
         style={{
-          backgroundColor: "#e1f5e7",
-          borderRadius: 50,
-          width: 44,
-          height: 44,
+          backgroundColor: theme.colors.primary + "15",
+          borderRadius: 8,
+          width: 36,
+          height: 36,
           justifyContent: "center",
           alignItems: "center",
-          marginRight: 16,
+          marginRight: 12,
         }}
       >
-        <Ionicons name={icon as any} size={24} color="#008001" />
+        <Ionicons name={icon as any} size={18} color={theme.colors.primary} />
       </View>
       <View style={{ flex: 1 }}>
         <Text
           style={{
-            fontWeight: "bold",
-            fontSize: 16,
-            color: "#222",
-            marginBottom: 4,
+            fontWeight: "600",
+            fontSize: 14,
+            color: theme.colors.text,
+            marginBottom: 2,
           }}
         >
           {title}
         </Text>
-        <Text style={{ fontSize: 14, color: "#445" }}>{desc}</Text>
+        <Text
+          style={{
+            fontSize: 12,
+            color: theme.colors.textSecondary,
+            lineHeight: 16,
+          }}
+          numberOfLines={2}
+        >
+          {desc}
+        </Text>
       </View>
-      <Ionicons name="chevron-forward" size={20} color="#008001" />
+      <Ionicons
+        name="chevron-forward"
+        size={16}
+        color={theme.colors.textSecondary}
+      />
     </TouchableOpacity>
   );
 }

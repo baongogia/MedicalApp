@@ -3,7 +3,11 @@ import {
   createBottomTabNavigator,
   BottomTabBarProps,
 } from "@react-navigation/bottom-tabs";
-import { NavigationContainer } from "@react-navigation/native";
+import {
+  NavigationContainer,
+  DefaultTheme,
+  DarkTheme,
+} from "@react-navigation/native";
 
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -18,9 +22,11 @@ import Home from "../screens/Home";
 import Login from "../screens/Login";
 import Register from "../screens/Register";
 import { useAuth } from "../context/AuthContext/AuthContext";
+import { useThemeMode } from "../context/ThemeContext";
 import Settings from "../screens/Setting";
 import { createStackNavigator } from "@react-navigation/stack";
 import BookAppointment from "../screens/Features/BookAppointment";
+import AppointmentsList from "../screens/Features/AppointmentsList";
 import BookSupport from "../screens/Features/BookSupport";
 import MedicalHistory from "../screens/Features/MedicalHistory";
 import UserProfile from "../screens/Features/UserProfile";
@@ -28,6 +34,44 @@ import BlogDetail from "../components/Blog/BlogDetail";
 import DoctorHome from "../screens/Doctor";
 import NotificationsScreen from "../screens/Setting/NotificationsScreen";
 import AppearanceLanguageScreen from "../screens/Setting/AppearanceLanguageScreen";
+
+// Import new screens
+import DoctorConsultationScreen from "../screens/Doctor/ConsultationRequests";
+import ChatConsultationScreen from "../screens/Doctor/ChatConsultation";
+import CreatePrescriptionScreen from "../screens/Doctor/CreatePrescription";
+import PrescriptionSuccessScreen from "../screens/Doctor/PrescriptionSuccess";
+import PrescriptionPaymentScreen from "../screens/Features/PrescriptionPayment";
+import PaymentSuccessScreen from "../screens/Features/PaymentSuccess";
+import PrescriptionListScreen from "../screens/Features/PrescriptionList";
+import PrescriptionDetailScreen from "../screens/Features/PrescriptionDetail";
+import UserConsultationsScreen from "../screens/Features/UserConsultations";
+import UserChatConsultationScreen from "../screens/Features/UserChatConsultation";
+import DoctorProfileEdit from "../screens/Doctor/DoctorProfileEdit";
+import AIChatScreen from "../components/AIChat/AIChatScreen";
+import ManagerHomeScreen from "../screens/Manager/ManagerHomeScreen";
+import DoctorListScreen from "../screens/Manager/DoctorListScreen";
+import DoctorDetailScreen from "../screens/Manager/DoctorDetailScreen";
+import CertificatesScreen from "../screens/Manager/CertificatesScreen";
+import DoctorCertDetailScreen from "../screens/Manager/DoctorCertDetailScreen";
+import ScheduleScreen from "../screens/Manager/ScheduleScreen";
+import DoctorScheduleDetailScreen from "../screens/Manager/DoctorScheduleDetailScreen";
+import DutyHoursScreen from "../screens/Manager/DutyHoursScreen";
+import DutyHoursDetailScreen from "../screens/Manager/DutyHoursDetailScreen";
+import ApprovalRequestsScreen from "../screens/Manager/ApprovalRequestsScreen";
+import DoctorGuideScreen from "../screens/Manager/DoctorGuideScreen";
+import ScheduleGuideScreen from "../screens/Manager/ScheduleGuideScreen";
+import LeavePolicyGuideScreen from "../screens/Manager/LeavePolicyGuideScreen";
+
+// Import Staff screens
+import StaffDashboard from "../screens/Staff";
+import UserManagement from "../screens/Staff/UserManagement";
+import UserDetails from "../screens/Staff/UserDetails";
+import ConsultationHistory from "../screens/Staff/ConsultationHistory";
+import ConsultationDetail from "../screens/Staff/ConsultationDetail";
+import TreatmentHistory from "../screens/Staff/TreatmentHistory";
+import TreatmentDetail from "../screens/Staff/TreatmentDetail";
+import StaffNotifications from "../screens/Staff/StaffNotifications";
+
 
 const Tab = createBottomTabNavigator();
 const TAB_WIDTH = (Dimensions.get("window").width - 32) / 2;
@@ -43,13 +87,50 @@ export type RootStackParamList = {
   Home: undefined;
   BlogDetail: { blog: BlogType };
   BookAppointment: undefined;
+  AppointmentsList: undefined;
   BookSupport: undefined;
   MedicalHistory: undefined;
   UserProfile: undefined;
   Settings: undefined;
+
+  // Doctor screens
+  DoctorConsultationScreen: { doctorId: number };
+  ChatConsultation: {
+    consultationId: number;
+    patientName: string;
+    topic?: string;
+  };
+  CreatePrescription: { consultationId: number; patientName: string };
+  PrescriptionSuccess: { prescription: any; patientName: string };
+
+  // Patient screens
+  UserConsultations: undefined;
+  UserChatConsultation: {
+    consultationId: number;
+    doctorName: string;
+    topic?: string;
+  };
+  PrescriptionList: undefined;
+  PrescriptionPayment: { prescriptionId: number };
+  PaymentSuccess: { prescription: any; paymentMethod: string };
+  PrescriptionDetail: { prescriptionId: number };
+  
+  // AI Chat screens
+  AIChat: { consultationId?: string; patientInfo?: any };
+
+  // Staff screens
+  StaffDashboard: undefined;
+  UserManagement: undefined;
+  UserDetails: { userId: string };
+  ConsultationHistory: undefined;
+  ConsultationDetail: { consultationId: string };
+  TreatmentHistory: undefined;
+  TreatmentDetail: { treatmentId: string };
+  StaffNotifications: undefined;
 };
 
 function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+  const { theme } = useThemeMode();
   const indicatorAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -58,12 +139,22 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
       useNativeDriver: true,
     }).start();
   }, [state.index]);
+
   return (
-    <View style={styles.tabBar}>
+    <View
+      style={[
+        styles.tabBar,
+        {
+          backgroundColor: theme.colors.surface,
+          borderTopColor: theme.colors.border,
+        },
+      ]}
+    >
       <Animated.View
         style={[
           styles.indicator,
           {
+            backgroundColor: theme.colors.primary,
             transform: [{ translateX: indicatorAnim }],
           },
         ]}
@@ -73,7 +164,9 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
         const focused = state.index === idx;
         let iconName = "home";
         let label = "Home";
-        let labelColor = focused ? "#008001" : "#B0B0B0";
+        let labelColor = focused
+          ? theme.colors.primary
+          : theme.colors.textSecondary;
         if (route.name === "Home") {
           iconName = focused ? "home" : "home-outline";
           label = "Home";
@@ -111,6 +204,9 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 }
 
 function MainTabs() {
+  const { user } = useAuth();
+  const { theme } = useThemeMode();
+
   return (
     <Tab.Navigator
       id={undefined}
@@ -120,15 +216,15 @@ function MainTabs() {
         name="Home"
         component={Home}
         options={{
-          title: "Trang chủ",
-          headerStyle: { backgroundColor: "white" },
-          headerTintColor: "#008001",
-          headerTitleStyle: { fontWeight: "bold", fontSize: 22 },
+          title: `Xin chào, ${user?.name || "Khách"}`,
+          headerStyle: { backgroundColor: theme.colors.surface },
+          headerTintColor: theme.colors.primary,
+          headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
           headerRight: () => (
             <Ionicons
               name="home"
               size={24}
-              color="#008001"
+              color={theme.colors.primary}
               style={{ marginRight: 16 }}
             />
           ),
@@ -139,14 +235,14 @@ function MainTabs() {
         component={Settings}
         options={{
           title: "Cài đặt",
-          headerStyle: { backgroundColor: "white" },
-          headerTintColor: "#008001",
+          headerStyle: { backgroundColor: theme.colors.surface },
+          headerTintColor: theme.colors.primary,
           headerTitleStyle: { fontWeight: "bold", fontSize: 22 },
           headerRight: () => (
             <Ionicons
               name="settings"
               size={24}
-              color="#008001"
+              color={theme.colors.primary}
               style={{ marginRight: 16 }}
             />
           ),
@@ -158,10 +254,26 @@ function MainTabs() {
 
 export default function Navigation() {
   const { user } = useAuth();
+  const { theme, mode } = useThemeMode();
   const Stack = createStackNavigator();
 
+  // Create custom navigation theme
+  const navigationTheme = {
+    ...DefaultTheme,
+    dark: mode === "dark",
+    colors: {
+      ...DefaultTheme.colors,
+      primary: theme.colors.primary,
+      background: theme.colors.background,
+      card: theme.colors.surface,
+      text: theme.colors.text,
+      border: theme.colors.border,
+      notification: theme.colors.accent,
+    },
+  };
+
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={navigationTheme}>
       {!user ? (
         //
         <Stack.Navigator id={undefined} screenOptions={{ headerShown: false }}>
@@ -169,13 +281,214 @@ export default function Navigation() {
           <Stack.Screen name="Register" component={Register} />
         </Stack.Navigator>
       ) : user.role === "doctor" ? (
-        <DoctorHome />
+        <Stack.Navigator
+          id={undefined}
+          screenOptions={{
+            headerShown: false,
+          }}
+        >
+          <Stack.Screen
+            name="DoctorHome"
+            component={DoctorHome}
+            options={{
+              headerShown: true,
+              title: `Bác sĩ ${user?.name || ""}`,
+              headerStyle: { backgroundColor: theme.colors.surface },
+              headerTintColor: theme.colors.primary,
+              headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
+            }}
+          />
+          {/* Doctor screens */}
+          <Stack.Screen
+            name="DoctorConsultationScreen"
+            component={DoctorConsultationScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ChatConsultation"
+            component={ChatConsultationScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="CreatePrescription"
+            component={CreatePrescriptionScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="PrescriptionSuccess"
+            component={PrescriptionSuccessScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="PrescriptionDetail"
+            component={PrescriptionDetailScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="DoctorProfileEdit"
+            component={DoctorProfileEdit}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="AIChat"
+            component={AIChatScreen}
+            options={{ headerShown: false }}
+          />
+        </Stack.Navigator>
+      ) : user.role === "staff" ? (
+        <Stack.Navigator
+          id={undefined}
+          screenOptions={{
+            headerShown: false,
+          }}
+        >
+          <Stack.Screen
+            name="StaffDashboard"
+            component={StaffDashboard}
+            options={{
+              headerShown: false,
+              title: `Nhân viên ${user?.name || ""}`,
+            }}
+          />
+          <Stack.Screen
+            name="UserManagement"
+            component={UserManagement}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="UserDetails"
+            component={UserDetails}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ConsultationHistory"
+            component={ConsultationHistory}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ConsultationDetail"
+            component={ConsultationDetail}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="TreatmentHistory"
+            component={TreatmentHistory}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="TreatmentDetail"
+            component={TreatmentDetail}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="StaffNotifications"
+            component={StaffNotifications}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Settings"
+            component={Settings}
+            options={{
+              headerShown: true,
+              title: "Cài đặt",
+              headerStyle: { backgroundColor: theme.colors.surface },
+              headerTintColor: theme.colors.primary,
+              headerTitleStyle: { fontWeight: "bold", fontSize: 22 },
+            }}
+          />
+        </Stack.Navigator>
+      ) : user.role === "manager" ? (
+        <Stack.Navigator
+          id={undefined}
+          screenOptions={{
+            headerShown: false,
+          }}
+        >
+          <Stack.Screen
+            name="ManagerHomeScreen"
+            component={ManagerHomeScreen}
+            options={{
+              headerShown: false,
+              title: `Quản lý ${user?.name || ""}`,
+            }}
+          />
+          <Stack.Screen
+            name="DoctorListScreen"
+            component={DoctorListScreen}
+            options={{ headerShown: true, title: "Danh sách bác sĩ" }}
+          />
+          <Stack.Screen
+            name="DoctorDetailScreen"
+            component={DoctorDetailScreen}
+            options={{ headerShown: true, title: "Chi tiết bác sĩ" }}
+          />
+          <Stack.Screen
+            name="CertificatesScreen"
+            component={CertificatesScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="DoctorCertDetailScreen"
+            component={DoctorCertDetailScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ScheduleScreen"
+            component={ScheduleScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="DoctorScheduleDetailScreen"
+            component={DoctorScheduleDetailScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="DutyHoursScreen"
+            component={DutyHoursScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="DutyHoursDetailScreen"
+            component={DutyHoursDetailScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ApprovalRequestsScreen"
+            component={ApprovalRequestsScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="DoctorGuideScreen"
+            component={DoctorGuideScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ScheduleGuideScreen"
+            component={ScheduleGuideScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="LeavePolicyGuideScreen"
+            component={LeavePolicyGuideScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Settings"
+            component={Settings}
+            options={{
+              headerShown: true,
+              title: "Cài đặt",
+              headerStyle: { backgroundColor: theme.colors.surface },
+              headerTintColor: theme.colors.primary,
+              headerTitleStyle: { fontWeight: "bold", fontSize: 22 },
+            }}
+          />
+        </Stack.Navigator>
       ) : (
         <Stack.Navigator
           id={undefined}
           screenOptions={{
             headerShown: false,
-
             gestureEnabled: true,
             animation: "slide_from_right",
           }}
@@ -191,9 +504,16 @@ export default function Navigation() {
             options={{
               headerShown: true,
               title: "",
-              headerStyle: { backgroundColor: "white" },
-              headerTintColor: "#008001",
+              headerStyle: { backgroundColor: theme.colors.surface },
+              headerTintColor: theme.colors.primary,
               headerTitleStyle: { fontWeight: "bold", fontSize: 22 },
+            }}
+          />
+          <Stack.Screen
+            name="AppointmentsList"
+            component={AppointmentsList}
+            options={{
+              headerShown: false,
             }}
           />
           <Stack.Screen
@@ -202,8 +522,8 @@ export default function Navigation() {
             options={{
               headerShown: true,
               title: "",
-              headerStyle: { backgroundColor: "white" },
-              headerTintColor: "#008001",
+              headerStyle: { backgroundColor: theme.colors.surface },
+              headerTintColor: theme.colors.primary,
               headerTitleStyle: { fontWeight: "bold", fontSize: 22 },
             }}
           />
@@ -213,8 +533,8 @@ export default function Navigation() {
             options={{
               headerShown: true,
               title: "",
-              headerStyle: { backgroundColor: "white" },
-              headerTintColor: "#008001",
+              headerStyle: { backgroundColor: theme.colors.surface },
+              headerTintColor: theme.colors.primary,
               headerTitleStyle: { fontWeight: "bold", fontSize: 22 },
             }}
           />
@@ -224,8 +544,8 @@ export default function Navigation() {
             options={{
               headerShown: true,
               title: "",
-              headerStyle: { backgroundColor: "white" },
-              headerTintColor: "#008001",
+              headerStyle: { backgroundColor: theme.colors.surface },
+              headerTintColor: theme.colors.primary,
               headerTitleStyle: { fontWeight: "bold", fontSize: 22 },
             }}
           />
@@ -235,19 +555,8 @@ export default function Navigation() {
             options={{
               headerShown: true,
               title: "",
-              headerStyle: { backgroundColor: "white" },
-              headerTintColor: "#008001",
-              headerTitleStyle: { fontWeight: "bold", fontSize: 22 },
-            }}
-          />
-          <Stack.Screen
-            name="DoctorHome"
-            component={DoctorHome}
-            options={{
-              headerShown: true,
-              title: "",
-              headerStyle: { backgroundColor: "white" },
-              headerTintColor: "#008001",
+              headerStyle: { backgroundColor: theme.colors.surface },
+              headerTintColor: theme.colors.primary,
               headerTitleStyle: { fontWeight: "bold", fontSize: 22 },
             }}
           />
@@ -263,6 +572,43 @@ export default function Navigation() {
             component={AppearanceLanguageScreen}
             options={{ title: "Giao diện và Ngôn ngữ" }}
           />
+
+          {/* Patient screens */}
+          <Stack.Screen
+            name="UserConsultations"
+            component={UserConsultationsScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="UserChatConsultation"
+            component={UserChatConsultationScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="PrescriptionList"
+            component={PrescriptionListScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="PrescriptionPayment"
+            component={PrescriptionPaymentScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="PaymentSuccess"
+            component={PaymentSuccessScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="PrescriptionDetail"
+            component={PrescriptionDetailScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="AIChat"
+            component={AIChatScreen}
+            options={{ headerShown: false }}
+          />
         </Stack.Navigator>
       )}
     </NavigationContainer>
@@ -277,7 +623,6 @@ const styles = StyleSheet.create({
     left: 16,
     right: 16,
     height: 64,
-    backgroundColor: "#fff",
     borderRadius: 32,
     alignItems: "center",
     justifyContent: "center",
@@ -286,6 +631,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     shadowRadius: 16,
     elevation: 10,
+    borderTopWidth: 1,
   },
   tabButton: {
     flex: 1,
@@ -300,7 +646,7 @@ const styles = StyleSheet.create({
     width: TAB_WIDTH,
     height: 64,
     borderRadius: 999,
-    backgroundColor: "rgba(0, 128, 1, 0.2)",
     zIndex: 0,
+    opacity: 0.2,
   },
 });
